@@ -1,0 +1,511 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Merci{% endblock %}
+
+{% block body %}
+    {% if app.user %}
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar-container">
+                    {% if app.user.avatar %}
+                        <img src="{{ asset('assets/' ~ app.user.avatar) }}" alt="Avatar" class="avatar" />
+                    {% else %}
+                        <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar par défaut" class="avatar" />
+                    {% endif %}
+                </div>
+                <div class="user-welcome">
+                    <h1 class="user-title">Bienvenue, {{ app.user.username }}</h1>
+                </div>
+                <form action="{{ path('app_logout') }}" method="post" class="logout-btn">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Nouveau bouton "Créer un nouveau Merci" -->
+        <a href="{{ path('merci_new') }}" class="btn-new-thank-you">Créer un nouveau Merci</a>
+
+        <div class="controls">
+            <button id="toggleMercis" onclick="toggleList()" class="btn-toggle">Mercis envoyés</button>
+            <span class="click-here-label"> <<< Cliquez ici</span>
+
+            <div class="sort-search-container">
+                <form method="get" action="{{ path('merci_index') }}" class="sort-form">
+                    <select name="sortByDate" id="sortByDate" onchange="handleSortChange()" class="select-sort">
+                        <option value="desc" {% if sortByDate == 'desc' %}selected{% endif %}>Du plus récent au plus ancien</option>
+                        <option value="asc" {% if sortByDate == 'asc' %}selected{% endif %}>Du plus ancien au plus récent</option>
+                    </select>
+                </form>
+                <input type="text" id="searchMerci" value="{{ searchTerm }}" placeholder="Rechercher un message..." oninput="liveSearch()" class="search-input"/>
+            </div>
+        </div>
+
+        <div id="merciListRecus" class="merci-list">
+            <h3 class="list-title">Mercis reçus</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Expéditeur</th>
+                    <th>Destinataire</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for merci in mercisRecus %}
+                    <tr class="merci-item">
+                        <td>
+                            <img src="{{ asset('assets/' ~ merci.fromEmployee.avatar) }}" alt="Avatar" class="avatar-small">
+                            {{ merci.fromEmployee.username }}
+                        </td>
+                        <td>
+                            <img src="{{ asset('assets/' ~ merci.toEmployee.avatar) }}" alt="Avatar" class="avatar-small">
+                            {{ merci.toEmployee.username }}
+                        </td>
+                        <td>{{ merci.message }}</td>
+                        <td>{{ merci.date|date('d/m/Y H:i') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">Aucun merci trouvé.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="merciListEnvoyes" class="merci-list" style="display: none;">
+            <h3 class="list-title">Mercis envoyés</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Expéditeur</th>
+                    <th>Destinataire</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for merci in mercisEnvoyes %}
+                    <tr class="merci-item">
+                        <td>
+                            <img src="{{ asset('assets/' ~ merci.fromEmployee.avatar) }}" alt="Avatar" class="avatar-small">
+                            {{ merci.fromEmployee.username }}
+                        </td>
+                        <td>
+                            <img src="{{ asset('assets/' ~ merci.toEmployee.avatar) }}" alt="Avatar" class="avatar-small">
+                            {{ merci.toEmployee.username }}
+                        </td>
+                        <td>{{ merci.message }}</td>
+                        <td>{{ merci.date|date('d/m/Y H:i') }}</td>
+                        <td>
+                            <!-- Trois points pour ouvrir le menu avec Modifier et Supprimer -->
+                            <button class="btn-options" onclick="toggleOptionsMenu({{ merci.id }})">...</button>
+                            <div id="options-menu-{{ merci.id }}" class="options-menu">
+                                <a href="{{ path('merci_edit', {'id': merci.id}) }}" class="btn-edit">Modifier</a>
+                                <form action="{{ path('merci_delete', {'id': merci.id}) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce message ?')">Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">Aucun merci trouvé.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="footer">
+            <p>Powered by Hamda Yedes 2024</p>
+            <img src="{{ asset('HamdaYedes.jpg') }}" alt="Logo Hamda" class="footer-logo" />
+        </footer>
+
+
+    {% else %}
+        <p>Veuillez vous <a href="{{ path('app_login') }}">connecter</a>.</p>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function liveSearch() {
+            var input, filter, ul, li, i, txtValue;
+            input = document.getElementById('searchMerci');
+            filter = input.value.toLowerCase();
+
+            // Recherche dans les mercis reçus
+            ul = document.getElementById('merciListRecus');
+            li = ul.getElementsByClassName('merci-item');
+            for (i = 0; i < li.length; i++) {
+                txtValue = li[i].textContent || li[i].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+
+            // Recherche dans les mercis envoyés
+            ul = document.getElementById('merciListEnvoyes');
+            li = ul.getElementsByClassName('merci-item');
+            for (i = 0; i < li.length; i++) {
+                txtValue = li[i].textContent || li[i].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
+
+        function toggleList() {
+            var listRecus = document.getElementById('merciListRecus');
+            var listEnvoyes = document.getElementById('merciListEnvoyes');
+            var toggleButton = document.getElementById('toggleMercis');
+
+            if (listRecus.style.display === 'block') {
+                listRecus.style.display = 'none';
+                listEnvoyes.style.display = 'block';
+                toggleButton.textContent = 'Mercis reçus';  // Change le texte du bouton
+            } else {
+                listRecus.style.display = 'block';
+                listEnvoyes.style.display = 'none';
+                toggleButton.textContent = 'Mercis envoyés';  // Change le texte du bouton
+            }
+        }
+
+        function handleSortChange() {
+            var sortValue = document.getElementById('sortByDate').value;
+            var url = new URL(window.location.href);
+            url.searchParams.set('sortByDate', sortValue);
+
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    document.querySelector('body').innerHTML = data;
+                });
+        }
+
+        function toggleOptionsMenu(merciId) {
+            const menu = document.getElementById('options-menu-' + merciId);
+            const isCurrentlyVisible = menu.style.display === 'block';
+            menu.style.display = isCurrentlyVisible ? 'none' : 'block';
+
+            if (!isCurrentlyVisible) {
+                document.addEventListener('click', closeOptionsMenuOnClickOutside);
+            } else {
+                document.removeEventListener('click', closeOptionsMenuOnClickOutside);
+            }
+        }
+
+        function closeOptionsMenuOnClickOutside(event) {
+            const optionsMenus = document.querySelectorAll('.options-menu');
+
+            let clickedOutside = true;
+            optionsMenus.forEach(menu => {
+                if (menu.contains(event.target) || event.target.closest('.btn-options')) {
+                    clickedOutside = false;
+                }
+            });
+
+            if (clickedOutside) {
+                optionsMenus.forEach(menu => {
+                    menu.style.display = 'none';
+                });
+
+                document.removeEventListener('click', closeOptionsMenuOnClickOutside);
+            }
+        }
+
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f0a500;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar-container {
+            margin-right: 15px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-welcome h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .logout-btn button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn button:hover {
+            background-color: #f04a5f;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .btn-toggle {
+            background-color: #4b79a1;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-toggle:hover {
+            background-color: #344e72;
+        }
+
+        .sort-search-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            margin-left: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .select-sort {
+            padding: 8px;
+            margin-left: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #4b79a1;
+            color: white;
+        }
+
+        .merci-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+
+        .merci-list {
+            margin-top: 30px;
+        }
+
+        .list-title {
+            color: #4b79a1;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo {
+            width: 40px;
+            height: auto;
+        }
+
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+        .click-here-label {
+            position: relative;
+            left: -445px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            color: #4b79a1;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            padding-left: 30px;
+            transition: color 0.3s ease;
+        }
+
+        .click-here-label:hover {
+            color: #f04a5f;
+        }
+
+        .click-here-label::before {
+            content: '⚡'; /* Utilise un éclair comme symbole */
+            font-size: 20px;
+            position: absolute;
+            left: 10px;
+            top: 0;
+            animation: flash 1s infinite alternate; /* Animation du flash */
+        }
+
+        @keyframes flash {
+            0% {
+                opacity: 0;
+                transform: translateX(-5px);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(5px);
+            }
+        }
+
+        .btn-new-thank-you {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #4b79a1;
+            color: white;
+            text-decoration: none;
+            /*border-radius: 4px;*/
+            font-size: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-new-thank-you:hover {
+            background-color: #344e72;
+            transform: scale(1.05);
+        }
+        .options-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .options-menu a,
+        .options-menu button {
+            display: block;
+            padding: 8px 15px;
+            margin-bottom: 5px;
+            text-decoration: none;
+            color: #333;
+            border: none;
+            background-color: transparent;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .btn-options {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #4b79a1;
+        }
+
+        .btn-options:hover {
+            color: #f04a5f;
+        }
+
+        .btn-edit:hover {
+            background-color: #f0a500;
+            color: white;
+        }
+
+        .btn-delete {
+            color: #f04a5f;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover {
+            background-color: #f04a5f;
+            color: white;
+            /*text-decoration: underline;*/
+        }
+    </style>
+{% endblock %}

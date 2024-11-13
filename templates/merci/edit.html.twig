@@ -1,0 +1,209 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Merci{% endblock %}
+
+{% block body %}
+    {% if app.user %}
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar-container">
+                    {% if app.user.avatar %}
+                        <img src="{{ asset('assets/' ~ app.user.avatar) }}" alt="Avatar" class="avatar" />
+                    {% else %}
+                        <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar par défaut" class="avatar" />
+                    {% endif %}
+                </div>
+                <div class="user-welcome">
+                    <h1 class="user-title">Bienvenue, {{ app.user.username }}</h1>
+                </div>
+                <form action="{{ path('app_logout') }}" method="post" class="logout-btn">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="merci-form-container">
+            <h3 class="list-title">Modifier un message de remerciement</h3>
+
+            {{ form_start(form, {'attr': {'class': 'merci-form'}}) }}
+            <div class="form-group">
+                <label for="form_toEmployee">Destinataire</label>
+                {{ form_widget(form.toEmployee, {'attr': {'class': 'form-input'}}) }}
+            </div>
+            <div class="form-group">
+                <label for="form_message">Message</label>
+                {{ form_widget(form.message, {'attr': {'class': 'form-textarea'}}) }}
+            </div>
+            <button type="submit" class="btn-submit">Modifier</button>
+            {{ form_end(form) }}
+
+            <a href="{{ path('merci_index') }}" class="back-link">Retour à la liste des mercis</a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by Hamda Yedes 2024</p>
+            <img src="{{ asset('HamdaYedes.jpg') }}" alt="Logo Hamda" class="footer-logo" />
+        </footer>
+
+    {% else %}
+        <p>Veuillez vous <a href="{{ path('app_login') }}">connecter</a>.</p>
+    {% endif %}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f0a500;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar-container {
+            margin-right: 15px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-welcome h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .logout-btn button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn button:hover {
+            background-color: #f04a5f;
+        }
+
+        .merci-form-container {
+            margin: 40px auto;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .list-title {
+            color: #4b79a1;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #4b79a1;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+
+        .form-textarea {
+            height: 120px;
+        }
+
+        .btn-submit {
+            background-color: #4b79a1;
+            color: white;
+            padding: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            background-color: #344e72;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #4b79a1;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            text-align: center;
+            width: 100%;
+        }
+
+        .back-link:hover {
+            color: #f04a5f;
+        }
+
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo {
+            width: 40px;
+            height: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script>
+    </script>
+{% endblock %}

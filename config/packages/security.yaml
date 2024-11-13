@@ -1,0 +1,34 @@
+security:
+    enable_authenticator_manager: true
+
+    encoders:
+        App\Entity\Employee:
+            algorithm: bcrypt
+
+    providers:
+        # Définition du provider pour récupérer les employés depuis la base de données
+        employee_provider:
+            entity:
+                class: App\Entity\Employee
+                property: username
+
+    firewalls:
+        dev:
+            pattern: ^/(_wdt|_profiler|assets|css|images|js|favicon.ico)
+            security: false
+
+        main:
+            pattern: ^/
+            form_login:
+                login_path: app_login
+                check_path: app_login
+            logout:
+                path: app_logout
+            # Ajoutez le provider pour le firewall
+            provider: employee_provider
+
+    # Configuration des rôles et autorisations
+    access_control:
+        - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/merci, roles: ROLE_USER }
+        - { path: ^/merci, roles: IS_AUTHENTICATED_FULLY }
